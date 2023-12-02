@@ -26,12 +26,13 @@ def max_reducer(dict1, dict2):
     }
 
 
+def compute_max_colors(grabs):
+    return reduce(max_reducer, grabs)
+
+
 def parse_line(line):
     id_string, set_string = line.split(": ")
-    id = parse_id(id_string)
-    set_strings = set_string.split("; ")
-    max_colors = reduce(max_reducer, map(parse_set_string, set_strings))
-    return id, validate(max_colors)
+    return parse_id(id_string), map(parse_set_string, set_string.split("; "))
 
 
 def parse_set_string(set_string):
@@ -47,17 +48,19 @@ def parse_entry(entry):
 def parse_id(id_string):
     return int(id_string.split(" ")[1])
 
+def solve_line(line):
+    id, grabs = parse_line(line)
+    return id if validate(compute_max_colors(grabs)) else 0
+
 
 def solve(lines):
-    pass
+    return sum(map(solve_line, lines))
+
 
 
 def main():
     lines = read_input("input.txt")
-    # lines = read_input("sample-part1.txt")
-    print(
-        sum(map(lambda x: x[0], list(filter(lambda x: x[1], map(parse_line, lines)))))
-    )
+    print(solve(lines))
 
 
 if __name__ == "__main__":
