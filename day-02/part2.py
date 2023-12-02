@@ -1,7 +1,8 @@
 from collections.abc import Iterable
+from collections import defaultdict
 from functools import reduce
 import math
-from typing import Tuple
+from typing import Dict, Tuple
 
 colors = ["red", "green", "blue"]
 
@@ -10,31 +11,29 @@ def power(max_colors: dict[str, int]) -> int:
     return math.prod(max_colors.values())
 
 
-def get(key: str, d: dict[str, int]) -> int:
-    return d[key] if key in d else 0
-
-
 def read_input(filename: str) -> Iterable[str]:
     with open(filename) as file:
-        return (line.rstrip() for line in file)
+        return [line.rstrip() for line in file]
 
 
-def max_reducer(grab1: dict[str, int], grab2: dict[str, int]) -> dict[str, int]:
-    return {color: max(get(color, grab1), get(color, grab2)) for color in colors}
+def max_reducer(grab1: Dict[str, int], grab2: Dict[str, int]) -> Dict[str, int]:
+    return defaultdict(
+        int, {color: max(grab1[color], grab2[color]) for color in colors}
+    )
 
 
-def compute_max_colors(grabs: Iterable[dict[str, int]]) -> dict[str, int]:
+def compute_max_colors(grabs: Iterable[Dict[str, int]]) -> Dict[str, int]:
     return reduce(max_reducer, grabs)
 
 
-def parse_line(line: str) -> Iterable[dict[str, int]]:
+def parse_line(line: str) -> Iterable[Dict[str, int]]:
     _, set_string = line.split(": ")
     return map(parse_set_string, set_string.split("; "))
 
 
-def parse_set_string(set_string: str) -> dict[str, int]:
+def parse_set_string(set_string: str) -> Dict[str, int]:
     entries = set_string.split(", ")
-    return dict(map(parse_entry, entries))
+    return defaultdict(int, map(parse_entry, entries))
 
 
 def parse_entry(entry: str) -> Tuple[str, int]:
