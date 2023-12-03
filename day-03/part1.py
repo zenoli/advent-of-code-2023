@@ -18,9 +18,9 @@ def clean_lines(lines):
 
 def borders_symbol(i, j, S):
     def check_row(row):
-        return SYMBOL in S[row][max(j - 1, 0) : min(j + 2, len(S[0]) - 1)]
+        return SYMBOL in S[row][max(j - 1, 0) : min(j + 2, len(S[0]))]
 
-    return any(map(check_row, range(max(i - 1, 0), min(i + 2, len(S) - 1))))
+    return any(map(check_row, range(max(i - 1, 0), min(i + 2, len(S)))))
 
 
 def main():
