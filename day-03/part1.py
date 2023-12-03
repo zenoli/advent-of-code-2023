@@ -30,6 +30,8 @@ def main():
     sum = 0
     is_adjacent_to_symbol = False
 
+    numbers_to_gears = dict()
+
     current_num = ""
     for i in range(len(S)):
         for j in range(len(S[0])):
