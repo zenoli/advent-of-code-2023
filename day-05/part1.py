@@ -40,7 +40,7 @@ def compute_intervals_and_offsets(map_list):
 
 
 def map_to_dest(id, intervals, offsets):
-    return id + offsets[bisect.bisect_left(intervals, id)]
+    return id + offsets[bisect.bisect_right(intervals, id)]
 
 
 def map_seed_to_location(seed, map_lists):
@@ -60,7 +60,7 @@ def solve(lines):
 
 
 def main():
-    # lines = read_input("sample-part1.txt")
+    # lines = read_input("sample.txt")
     lines = read_input("input.txt")
     print(solve(lines))
 
