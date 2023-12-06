@@ -32,12 +32,17 @@ computed offset ids:
 
 Case 2: Input seed interval crosses several interval boundaries
 
+Input: [15, 30]
 Input: [15, 45]
 coputed offset ids:
 1, 4
 
 [10, 20, 30, 40, 50]
 [0, 2, -5, 22, 13, 0]
+
+[15, 20, 30, 40, 45]
+[17, 5], [15, 10], [52, 10], [53, 5]
+
 
 
 [15, 20], [20, 30], [30, 40], [40, 45]
