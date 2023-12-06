@@ -45,11 +45,10 @@ def map_to_dest(id, intervals, offsets):
 
 def map_seed_to_location(seed, map_lists):
     def f(id, map_list):
-        intermediate =  map_to_dest(id, *compute_intervals_and_offsets(map_list))
+        intermediate = map_to_dest(id, *compute_intervals_and_offsets(map_list))
         return intermediate
 
     return reduce(f, map_lists, seed)
-
 
 
 def solve(lines):

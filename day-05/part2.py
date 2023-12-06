@@ -52,7 +52,6 @@ def get_relevant_partition(src_interval, intervals):
 
 
 def compute_dst_intervals_from_partitions(partition, intervals, offsets):
-    # io = compute_intervals_and_offsets(map_list)
     unmapped_intervals = list(zip(partition, partition[1:]))
     return [
         (map_to_dest(start, intervals, offsets), end - start)
@@ -85,14 +84,6 @@ def map_to_dest(id, intervals, offsets):
     return id + offsets[bisect.bisect_right(intervals, id)]
 
 
-def map_seed_to_location(seed, map_lists):
-    def f(id, map_list):
-        intermediate = map_to_dest(id, *compute_intervals_and_offsets(map_list))
-        return intermediate
-
-    return reduce(f, map_lists, seed)
-
-
 def get_seeds_from_ranges(seed_ranges):
     return chain(
         *(
@@ -109,9 +100,10 @@ def solve(lines):
     ]
     map_lists = list(map_list_generator(lines[2:]))
 
-    location_invervals = map_seed_intervals_to_location_intervals(seed_intervals, map_lists)
+    location_invervals = map_seed_intervals_to_location_intervals(
+        seed_intervals, map_lists
+    )
     return min((location_interval[0] for location_interval in location_invervals))
-
 
 
 def main():
