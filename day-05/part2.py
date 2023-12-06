@@ -1,3 +1,4 @@
+import itertools
 import re
 import bisect
 from functools import reduce
@@ -40,22 +41,44 @@ def compute_intervals_and_offsets(map_list):
     return intervals, [0] + offsets + [0]
 
 
-def get_relevant_partition(seed_interval, intervals):
-    seed_start, seed_end = seed_interval
+def get_relevant_partition(src_interval, intervals):
+    src_start = src_interval[0]
+    src_end = sum(src_interval)
     o_id_start, o_id_end = (
-        bisect.bisect_right(intervals, seed_start),
-        bisect.bisect_right(intervals, seed_end),
+        bisect.bisect_right(intervals, src_start),
+        bisect.bisect_right(intervals, src_end),
     )
-    return [seed_start] + intervals[o_id_start:o_id_end] + [seed_end]
+    return [src_start] + intervals[o_id_start:o_id_end] + [src_end]
 
 
 def compute_dst_intervals_from_partitions(partition, intervals, offsets):
     # io = compute_intervals_and_offsets(map_list)
     unmapped_intervals = list(zip(partition, partition[1:]))
     return [
-        (map_to_dest(start, intervals, offsets), map_to_dest(end, intervals, offsets))
+        (map_to_dest(start, intervals, offsets), end - start)
         for start, end in unmapped_intervals
     ]
+
+
+def map_interval_to_dest(src_interval, map_list):
+    intervals, offsets = compute_intervals_and_offsets(map_list)
+    partition = get_relevant_partition(src_interval, intervals)
+    return compute_dst_intervals_from_partitions(partition, intervals, offsets)
+
+
+def map_intervals_to_dest(src_intervals, map_list):
+    return list(
+        itertools.chain(
+            *[
+                map_interval_to_dest(src_interval, map_list)
+                for src_interval in src_intervals
+            ]
+        )
+    )
+
+
+def map_seed_intervals_to_location_intervals(seed_intervals, map_lists):
+    return reduce(map_intervals_to_dest, map_lists, seed_intervals)
 
 
 def map_to_dest(id, intervals, offsets):
@@ -81,12 +104,14 @@ def get_seeds_from_ranges(seed_ranges):
 
 def solve(lines):
     seed_ranges = parse_numbers(lines[0])
+    seed_intervals = [
+        (seed_ranges[i], seed_ranges[i + 1]) for i in range(0, len(seed_ranges), 2)
+    ]
     map_lists = list(map_list_generator(lines[2:]))
 
-    return min(
-        map_seed_to_location(seed, map_lists)
-        for seed in get_seeds_from_ranges(seed_ranges)
-    )
+    location_invervals = map_seed_intervals_to_location_intervals(seed_intervals, map_lists)
+    return min((location_interval[0] for location_interval in location_invervals))
+
 
 
 def main():
