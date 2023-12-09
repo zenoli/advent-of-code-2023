@@ -16,20 +16,11 @@ def diff(sequence):
     return [y - x for x, y in pairwise(sequence)]
 
 
-def compute_next(sequence):
-    if not any(sequence):
-        return 0
-    return sequence[-1] + compute_next(diff(sequence))
-
-
-def compute_prev(sequence):
-    if not any(sequence):
-        return 0
-    return sequence[0] - compute_prev(diff(sequence))
+def compute_prev(seq):
+    return 0 if not any(seq) else seq[0] - compute_prev(diff(seq))
 
 
 def solve(lines):
-    # print(sum(map(compute_next, map(parse_numbers, lines))))
     print(sum(map(compute_prev, map(parse_numbers, lines))))
 
 

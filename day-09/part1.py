@@ -16,10 +16,8 @@ def diff(sequence):
     return [y - x for x, y in pairwise(sequence)]
 
 
-def compute_next(sequence):
-    if not any(sequence):
-        return 0
-    return sequence[-1] + compute_next(diff(sequence))
+def compute_next(seq):
+    return 0 if not any(seq) else seq[-1] + compute_next(diff(seq))
 
 
 def solve(lines):
