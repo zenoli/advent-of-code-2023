@@ -22,11 +22,12 @@ def read_input(filename):
         lines = [line.rstrip() for line in file]
     return lines
 
+
 def move(current_pos, prev_pos, pipe):
     direction = prev_pos - current_pos
     next_direction = pipes[pipe][all(pipes[pipe][0] == direction)]
     next_pos = current_pos + next_direction
-    return next_pos, next_direction * -1
+    return next_pos
 
 
 def get_first_position(start_pos, pipe_map):
@@ -52,7 +53,7 @@ def main():
     dist = 1
 
     while not np.array_equal(current_pos, start_pos):
-        next_pos, _ = move(current_pos, prev_pos, pipe_map[tuple(current_pos)])
+        next_pos = move(current_pos, prev_pos, pipe_map[tuple(current_pos)])
         prev_pos = current_pos
         current_pos = next_pos
         dist += 1
