@@ -52,8 +52,8 @@ def move(current_pos, prev_pos, pipe):
 
 def get_interior_neighbors(current_pos, prev_pos, orientation):
     direction = current_pos - prev_pos
-    neightbor1 =  current_pos + np.array([direction[1], -direction[0]]) * orientation
-    neightbor2 =  prev_pos + np.array([direction[1], -direction[0]]) * orientation
+    neightbor1 = current_pos + np.array([direction[1], -direction[0]]) * orientation
+    neightbor2 = prev_pos + np.array([direction[1], -direction[0]]) * orientation
     return neightbor1, neightbor2
 
 
@@ -93,11 +93,10 @@ def main():
         orientation += turn
 
     interior = np.full(pipe_map.shape, 0)
-    interior_pretty = np.full(pipe_map.shape, ' ')
+    interior_pretty = np.full(pipe_map.shape, " ")
 
     for step in loop:
         interior[tuple(step)] = 1
-        pipe = pipe_map[tuple(step)]
 
     if orientation > 0:
         orientation = 1
@@ -113,14 +112,13 @@ def main():
                 mask = flood(interior, tuple(inner_neighbor))
                 interior[mask] = 2
 
-
     interior_pretty[interior == 2] = "I"
     interior_pretty[interior == 1] = "x"
-    
+
     print(interior_pretty)
     print(np.count_nonzero(interior == 2))
 
-    np.savetxt("border_only.txt", interior_pretty, fmt="%s", delimiter=" ")
+    np.savetxt("out/pipe-maze.txt", interior_pretty, fmt="%s", delimiter=" ")
     # print(np.array2string(interior, separator=", "))
 
 
