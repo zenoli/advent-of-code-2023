@@ -1,4 +1,6 @@
 import numpy as np
+from itertools import pairwise
+from skimage.morphology import flood
 
 
 # Directions
@@ -48,6 +50,11 @@ def move(current_pos, prev_pos, pipe):
     return next_pos, turn(direction, pipe)
 
 
+def get_interior_neighbor(current_pos, prev_pos, orientation):
+    direction = current_pos - prev_pos
+    return current_pos + np.array([direction[1], -direction[0]]) * orientation
+
+
 def get_first_position(start_pos, pipe_map):
     if pipe_map[tuple(start_pos + RIGHT)] in ["-", "J", "7"]:
         return start_pos + RIGHT
@@ -63,6 +70,7 @@ def main():
     # lines = read_input("sample1.txt")
     # lines = read_input("sample2.txt")
     # lines = read_input("sample3.txt")
+    # lines = read_input("sample4.txt")
     lines = read_input("input.txt")
     pipe_map = np.array(list(map(list, lines)))
     start_pos = np.argwhere(pipe_map == "S")[0]
@@ -82,11 +90,35 @@ def main():
         dist += 1
         orientation += turn
 
-    print(dist // 2)
+    interior = np.full(pipe_map.shape, 0)
+    interior_pretty = np.full(pipe_map.shape, ' ')
+
+    for step in loop:
+        interior[tuple(step)] = 1
+        pipe = pipe_map[tuple(step)]
+
     if orientation > 0:
+        orientation = 1
         print("RIGHT turning circle")
     else:
+        orientation = -1
         print("LEFT turning circle")
+
+    for prev_pos, current_pos in pairwise(loop):
+        inner_neighbor = get_interior_neighbor(current_pos, prev_pos, orientation)
+        if interior[tuple(inner_neighbor)] == 0:
+            mask = flood(interior, tuple(inner_neighbor))
+            interior[mask] = 2
+
+
+    interior_pretty[interior == 2] = "I"
+    interior_pretty[interior == 1] = "x"
+    
+    print(interior_pretty)
+    print(np.count_nonzero(interior == 2))
+
+    np.savetxt("border_only.txt", interior_pretty, fmt="%s", delimiter=" ")
+    # print(np.array2string(interior, separator=", "))
 
 
 if __name__ == "__main__":
