@@ -50,9 +50,11 @@ def move(current_pos, prev_pos, pipe):
     return next_pos, turn(direction, pipe)
 
 
-def get_interior_neighbor(current_pos, prev_pos, orientation):
+def get_interior_neighbors(current_pos, prev_pos, orientation):
     direction = current_pos - prev_pos
-    return current_pos + np.array([direction[1], -direction[0]]) * orientation
+    neightbor1 =  current_pos + np.array([direction[1], -direction[0]]) * orientation
+    neightbor2 =  prev_pos + np.array([direction[1], -direction[0]]) * orientation
+    return neightbor1, neightbor2
 
 
 def get_first_position(start_pos, pipe_map):
@@ -105,10 +107,11 @@ def main():
         print("LEFT turning circle")
 
     for prev_pos, current_pos in pairwise(loop):
-        inner_neighbor = get_interior_neighbor(current_pos, prev_pos, orientation)
-        if interior[tuple(inner_neighbor)] == 0:
-            mask = flood(interior, tuple(inner_neighbor))
-            interior[mask] = 2
+        inner_neighbors = get_interior_neighbors(current_pos, prev_pos, orientation)
+        for inner_neighbor in inner_neighbors:
+            if interior[tuple(inner_neighbor)] == 0:
+                mask = flood(interior, tuple(inner_neighbor))
+                interior[mask] = 2
 
 
     interior_pretty[interior == 2] = "I"
