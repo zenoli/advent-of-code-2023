@@ -4,45 +4,60 @@ def read_input(filename):
     return lines
 
 
-def f(X, c):
-    if not c:
-        return 0 if "#" in X else 1
-    if not X:
+X, c = "", []
+
+
+def f(i, j):
+    if j == len(c):
+        return 0 if "#" in X[i:] else 1
+    if i >= len(X):
         return 0
 
-    if X[0] == ".":
-        return f(X[1:], c)
+    res = 0
+    if X[i] in "?#" and can_place(i, c[j]):
+        res += f(i + c[j] + 1, j + 1)
 
-    if X[0] == "#":
-        if can_place(X, c[0]):
-            return f(X[c[0] + 1 :], c[1:])
-        else:
-            return 0
-
-    return f("#" + X[1:], c) + f("." + X[1:], c)
+    if X[i] in "?.":
+        res += f(i + 1, j)
+    return res
 
 
-def can_place(X, group):
-    if len(X) < group:
+def can_place(i, group):
+    if len(X[i:]) < group:
         return False
-    if len(X) > group and X[group] == "#":
+    if len(X[i:]) > group and X[i + group] == "#":
         return False
-    return set(X[:group]) <= {"#", "?"}
+    return set(X[i : i + group]) <= {"#", "?"}
 
 
-def parse_line(line):
+def parse_line2(line):
     record, groups = line.split()
     groups = list(map(int, ((groups + ",") * 5)[:-1].split(",")))
     return "?".join([record] * 5), groups
 
 
+def parse_line(line):
+    record, groups = line.split()
+    groups = list(map(int, groups.split(",")))
+    return record, groups
+
+
 def main():
-    lines = read_input("sample.txt")
+    # lines = read_input("sample.txt")
     lines = read_input("input.txt")
-    result = sum(f(record, group) for record, group in map(parse_line, lines[:1]))
-    print(result)
+    global X
+    global c
+
+    # result = sum(f(record, group) for record, group in map(parse_line, lines[:1]))
+    # print(result)
+    total = 0
     for record, group in map(parse_line, lines):
-        print(record, group)
+        X = record
+        c = group
+        result = f(0, 0)
+        total += result
+
+    print(total)
 
 
 if __name__ == "__main__":
