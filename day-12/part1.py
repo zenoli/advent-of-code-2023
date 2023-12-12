@@ -10,16 +10,13 @@ def f(X, c):
     if not X:
         return 0
 
-    if X[0] == ".":
-        return f(X[1:], c)
+    res = 0
+    if X[0] in "?#" and can_place(X, c[0]):
+        res += f(X[c[0] + 1 :], c[1:])
 
-    if X[0] == "#":
-        if can_place(X, c[0]):
-            return f(X[c[0] + 1 :], c[1:])
-        else:
-            return 0
-
-    return f("#" + X[1:], c) + f("." + X[1:], c)
+    if X[0] in "?.":
+        res += f(X[1:], c)
+    return res
 
 
 def can_place(X, group):
