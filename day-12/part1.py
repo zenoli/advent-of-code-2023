@@ -1,9 +1,13 @@
+from functools import cache
+
+
 def read_input(filename):
     with open(filename) as file:
         lines = [line.rstrip() for line in file]
     return lines
 
 
+@cache
 def f(X, c):
     if not c:
         return 0 if "#" in X else 1
@@ -29,7 +33,7 @@ def can_place(X, group):
 
 def parse_line(line):
     record, groups = line.split()
-    groups = list(map(int, groups.split(",")))
+    groups = tuple(map(int, groups.split(",")))
     return record, groups
 
 
