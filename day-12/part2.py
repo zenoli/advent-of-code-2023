@@ -5,6 +5,7 @@ def read_input(filename):
 
 
 X, c = "", []
+memo = {}
 
 
 def f(i, j):
@@ -15,10 +16,18 @@ def f(i, j):
 
     res = 0
     if X[i] in "?#" and can_place(i, c[j]):
-        res += f(i + c[j] + 1, j + 1)
+        key = (i + c[j] + 1, j + 1)
+        if key not in memo:
+            tmp = f(*key)
+            memo[key] = tmp
+        res += memo[key]
 
     if X[i] in "?.":
-        res += f(i + 1, j)
+        key = (i + 1, j)
+        if key not in memo:
+            tmp = f(*key)
+            memo[key] = tmp
+        res += memo[key]
     return res
 
 
@@ -47,13 +56,13 @@ def main():
     lines = read_input("input.txt")
     global X
     global c
+    global memo
 
-    # result = sum(f(record, group) for record, group in map(parse_line, lines[:1]))
-    # print(result)
     total = 0
-    for record, group in map(parse_line, lines):
+    for record, group in map(parse_line2, lines):
         X = record
         c = group
+        memo = {}
         result = f(0, 0)
         total += result
 
