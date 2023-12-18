@@ -48,44 +48,52 @@ def debug(grid, seen):
     print("=============================================")
 
 
-def main():
-    lines = read_input("sample.txt")
-    # lines = read_input("input.txt")
-    grid = np.array(list(map(list, lines)))
+def compute_next_positions(pos, direction, symbol):
+    if symbol == "|" and direction in {LEFT, RIGHT}:
+        return [(pos, UP), (pos, DOWN)]
+    elif symbol == "-" and direction in {UP, DOWN}:
+        return [(pos, LEFT), (pos, RIGHT)]
+    elif symbol == "/":
+        return [(pos, mirror_slash(*direction))]
+    elif symbol == "\\":
+        return [(pos, mirror_backslash(*direction))]
+    else:
+        return [(pos, direction)]
+
+
+def cast_ray(pos, direction, grid):
     seen = np.full(grid.shape, None)
 
-    pos: Position = (0, 0)
-    beams: list[tuple[Position, Direction]] = [(pos, RIGHT)]
+    N = len(grid)
+    M = len(grid[0])
 
-    seen[pos] = True
+    beams: list[tuple[Position, Direction]] = [(pos, direction)]
 
     while beams:
         pos, direction = beams.pop()
-        if seen[pos] == direction:
-            continue
-
-        seen[pos] = direction
-        debug(grid, seen)
         next_pos = add(pos, direction)
-        if next_pos[0] not in range(len(grid)) or next_pos[1] not in range(
-            len(grid[0])
+
+        if (
+            next_pos[0] not in range(N)
+            or next_pos[1] not in range(M)
+            or seen[next_pos] == direction
         ):
             continue
 
-        if grid[next_pos] == "|" and direction in {LEFT, RIGHT}:
-            beams.append((next_pos, UP))
-            beams.append((next_pos, DOWN))
-        elif grid[next_pos] == "-" and direction in {UP, DOWN}:
-            beams.append((next_pos, LEFT))
-            beams.append((next_pos, RIGHT))
-        elif grid[next_pos] == "/":
-            beams.append((next_pos, mirror_slash(*direction)))
-        elif grid[next_pos] == "\\":
-            beams.append((next_pos, mirror_backslash(*direction)))
-        else:
-            beams.append((next_pos, direction))
+        seen[next_pos] = direction
+        # debug(grid, seen)
+        beams.extend(compute_next_positions(next_pos, direction, grid[next_pos]))
 
-    print(np.count_nonzero(seen))
+    return np.count_nonzero(seen)
+
+
+def main():
+    # lines = read_input("sample.txt")
+    lines = read_input("input.txt")
+    grid = np.array(list(map(list, lines)))
+
+    energized_cells = cast_ray((0, -1), RIGHT, grid)
+    print(energized_cells)
 
 
 if __name__ == "__main__":
