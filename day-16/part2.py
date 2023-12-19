@@ -61,7 +61,11 @@ def compute_next_positions(pos, direction, symbol):
         return [(pos, direction)]
 
 
-def cast_ray(pos, direction, grid):
+def cast_ray(pos, direction, grid, visited_starts):
+    if pos in visited_starts:
+        return 0
+
+    visited_starts[pos] = True
     seen = np.full(grid.shape, None)
 
     N = len(grid)
@@ -73,11 +77,11 @@ def cast_ray(pos, direction, grid):
         pos, direction = beams.pop()
         next_pos = add(pos, direction)
 
-        if (
-            next_pos[0] not in range(N)
-            or next_pos[1] not in range(M)
-            or seen[next_pos] == direction
-        ):
+        if next_pos[0] not in range(N) or next_pos[1] not in range(M):
+            visited_starts[next_pos] = True
+            continue
+
+        if seen[next_pos] == direction:
             continue
 
         seen[next_pos] = direction
@@ -87,24 +91,30 @@ def cast_ray(pos, direction, grid):
     return np.count_nonzero(seen)
 
 
-def staring_points(N, M):
+def starting_points(N, M):
+    counter = 0
     for i in range(N):
         yield (i, -1), RIGHT
         yield (i, M), LEFT
-        print(f"[{i}/{N}]")
+        counter += 2
         for j in range(M):
             yield (-1, j), DOWN
             yield (N, j), UP
+            counter += 2
+            if counter > 1208:
+                return
 
 
 def main():
     # lines = read_input("sample.txt")
     lines = read_input("input.txt")
     grid = np.array(list(map(list, lines)))
+    visited_starts = dict()
     N = len(grid)
     M = len(grid[0])
     solution = max(
-        cast_ray(pos, direction, grid) for pos, direction in staring_points(N, M)
+        cast_ray(pos, direction, grid, visited_starts)
+        for pos, direction in starting_points(N, M)
     )
 
     print(solution)
