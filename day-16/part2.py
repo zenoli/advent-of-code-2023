@@ -82,18 +82,32 @@ def cast_ray(pos, direction, grid):
 
         seen[next_pos] = direction
         beams.extend(compute_next_positions(next_pos, direction, grid[next_pos]))
-        debug(grid, seen)
+        # debug(grid, seen)
 
     return np.count_nonzero(seen)
 
 
-def main():
-    lines = read_input("sample.txt")
-    # lines = read_input("input.txt")
-    grid = np.array(list(map(list, lines)))
+def staring_points(N, M):
+    for i in range(N):
+        yield (i, -1), RIGHT
+        yield (i, M), LEFT
+        print(f"[{i}/{N}]")
+        for j in range(M):
+            yield (-1, j), DOWN
+            yield (N, j), UP
 
-    energized_cells = cast_ray((0, -1), RIGHT, grid)
-    print(energized_cells)
+
+def main():
+    # lines = read_input("sample.txt")
+    lines = read_input("input.txt")
+    grid = np.array(list(map(list, lines)))
+    N = len(grid)
+    M = len(grid[0])
+    solution = max(
+        cast_ray(pos, direction, grid) for pos, direction in staring_points(N, M)
+    )
+
+    print(solution)
 
 
 if __name__ == "__main__":
