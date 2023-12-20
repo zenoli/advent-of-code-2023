@@ -48,7 +48,9 @@ def main():
     queue: list[Position] = [(0, 0)]
 
     while not visited[-1, -1]:
-        pos = queue.pop()
+        pos = queue.pop(0)
+        if visited[pos]:
+            continue
         visited[pos] = True
 
         for direction in directions:
@@ -59,23 +61,10 @@ def main():
                 queue.append(neighbor)
             new_dist = distances[pos] + grid[neighbor]
 
-            prev1 = sub(pos, direction)
-            prev2 = sub(prev1, direction)
-            straight_line = False
-            # if on_grid(prev1, N, M) and on_grid(prev2, N, M):
-            #     straight_line = all(
-            #         set(direction) == arrows[p] for p in [prev2, prev1, pos]
-            #     )
-
-            if not straight_line and new_dist == distances[neighbor]:
-                arrows[neighbor].add(direction)
-
-            if not straight_line and new_dist < distances[neighbor]:
-                distances[neighbor] = new_dist
-                arrows[neighbor] = set(direction)
+            distances[neighbor] = min(distances[neighbor], new_dist)
 
     print(distances)
-    # print(arrows)
+
 
 
 if __name__ == "__main__":
