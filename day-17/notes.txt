@@ -7,3 +7,6 @@ def get_neighbors(pos, d, c):
 
 
 seen = np.full((*grid.shape, 4, 3))
+
+
+[5, 11, directions[DOWN]]
