@@ -1,6 +1,7 @@
-from typing import Mapping, Tuple
+from typing import Mapping
+from heapq import heappop, heappush
 import numpy as np
-import math
+
 
 Position = tuple[int, int]
 Direction = Position
@@ -11,9 +12,6 @@ LEFT: Direction = (0, -1)
 RIGHT: Direction = (0, 1)
 
 directions: Mapping[Direction, int] = {UP: 0, DOWN: 1, LEFT: 2, RIGHT: 3}
-
-arrow_symbols = {UP: "", DOWN: "", LEFT: "", RIGHT: ""}
-
 
 def add(a: tuple[int, int], b: tuple[int, int]) -> tuple[int, int]:
     return a[0] + b[0], a[1] + b[1]
@@ -50,22 +48,9 @@ def get_neighbors(pos, d, c, N, M):
     return [n for n in neighbors if on_grid(n[0], N, M)]
 
 
-def pop_next(queue, distances):
-    min_index = -1
-    min_dist = math.inf
-    for i, (pos, d, c) in enumerate(queue):
-        pos_index = (*pos, directions[d], c)
-        if distances[pos_index] < min_dist:
-            min_index = i
-            min_dist = distances[pos_index]
-    return queue.pop(min_index)
-
-
 def main():
-    # grid = read_input("input.txt")
-    # grid = read_input("sample.txt")[:6,:12]
-    grid = read_input("sample.txt")
-    # grid = read_input("sample2.txt")
+    # grid = read_input("sample.txt")
+    grid = read_input("input.txt")
     distances = np.full((*grid.shape, 4, 4), np.iinfo(np.int32).max)
     visited = np.full((*grid.shape, 4, 4), False)
 
@@ -73,14 +58,11 @@ def main():
 
     N, M = grid.shape
 
-    queue: list[tuple[Position, Direction, int]] = [
-        ((0, 0), RIGHT, 0),
-        ((0, 0), DOWN, 0),
-    ]
+    queue = []
+    heappush(queue, (0, ((0, 0), RIGHT, 0)))  # noqa: F821
 
     while queue:
-        # pos, d, c = queue.pop(0)
-        pos, d, c = pop_next(queue, distances)
+        min_dist, (pos, d, c) = heappop(queue)
 
         pos_index = (*pos, directions[d], c)
         if visited[pos_index]:
@@ -89,10 +71,10 @@ def main():
 
         for new_pos, new_d, new_c in get_neighbors(pos, d, c, N, M):
             new_pos_index = (*new_pos, directions[new_d], new_c)
-            if not visited[new_pos_index]:
-                queue.append((new_pos, new_d, new_c))
-            new_dist = distances[pos_index] + grid[new_pos]
+            new_dist = min_dist + grid[new_pos]
             distances[new_pos_index] = min(distances[new_pos_index], new_dist)
+            if not visited[new_pos_index]:
+                heappush(queue, (distances[new_pos_index], (new_pos, new_d, new_c)))
 
     print(distances[-1, -1, :, 1:].min())
 
