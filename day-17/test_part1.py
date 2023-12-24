@@ -20,7 +20,7 @@ def test_get_neighbors():
 
 
 def test_add():
-    assert add((1, 2), (2, 3)) == (2, 5)
+    assert add((1, 2), (2, 3)) == (3, 5)
 
 
 def test_sub():

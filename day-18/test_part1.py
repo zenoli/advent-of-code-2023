@@ -1,4 +1,4 @@
-from part1 import DOWN, LEFT, RIGHT, add, get_coords, sub, mul
+from part1 import DOWN, RIGHT, add, get_coords, mul, sub
 
 
 def test_tuple_arithmetic():

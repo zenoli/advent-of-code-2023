@@ -81,7 +81,7 @@ def get_intervals(point, intervals):
 
 
 def calculate_slice(xs):
-    sum(len(range(*b)) for b in batched(xs, 2))
+    return sum(len(range(*b)) for b in batched(xs, 2))
 
 
 def calculate_pit_size(scan_points, intervals):
