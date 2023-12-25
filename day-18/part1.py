@@ -68,14 +68,21 @@ def fill_pit(grid):
 
 
 def main():
-    # instructions = read_input("sample.txt")
+    # instructions = read_input("sample1.txt")
     instructions = read_input("input.txt")
 
     coords = get_coords(instructions)
     coords = shift_coords(coords)
     grid = draw(coords)
     fill_pit(grid)
-    print(np.count_nonzero(grid))
+    # print(np.count_nonzero(grid))
+    np.count_nonzero(grid, axis=0)
+    np.savetxt(
+        "out/col_counts_correct.txt",
+        np.count_nonzero(grid, axis=0),
+        fmt="%s",
+        delimiter=",",
+    )
 
 
 if __name__ == "__main__":
