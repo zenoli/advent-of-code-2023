@@ -15,6 +15,7 @@ LEFT: Direction = (0, -1)
 RIGHT: Direction = (0, 1)
 
 directions: Mapping[str, Direction] = {"U": UP, "D": DOWN, "L": LEFT, "R": RIGHT}
+directions_hex: Mapping[str, Direction] = {"3": UP, "1": DOWN, "2": LEFT, "0": RIGHT}
 
 
 def add(a: tuple[int, ...], b: tuple[int, ...]) -> tuple[int, ...]:
@@ -39,16 +40,20 @@ def shrink(r):
 
 def read_input(filename):
     def parse(line):
-        dir, steps, color = line.split()
-        return directions[dir], int(steps), color[1:-1]
+        dir, steps, _ = line.split()
+        return directions[dir], int(steps)
+
+    def parse_hex(line):
+        _, _, color = line.split()
+        return directions_hex[color[-2]], int(color[2:7], 16)
 
     with open(filename) as file:
-        return list(map(parse, file))
+        return list(map(parse_hex, file))
 
 
 def get_coords(instructions):
     def coord_reducer(coords, instruction):
-        dir, steps, _ = instruction
+        dir, steps = instruction
         return coords + [add(coords[-1], mul(dir, steps))]
 
     return reduce(coord_reducer, instructions, [(0, 0)])
@@ -177,30 +182,41 @@ def calculate_block(start, end, intervals):
 
 
 def calculate_pit_size(scan_points, intervals):
-    result = sum(
-        calculate_block(start, end, intervals) for start, end in pairwise(scan_points)
-    )
+    # result = sum(
+    #     calculate_block(start, end, intervals) for start, end in pairwise(sorted(scan_points))
+    # )
+    result = 0
+    print("Calculate Block:")
+    N = len(scan_points)
+    for i, (start, end) in enumerate(pairwise(sorted(scan_points)), start=1):
+        result += calculate_block(start, end, intervals)
+        print(f"[{i}/{N}]")
 
     return result
 
 
 def main():
-    # instructions = read_input("sample8.txt")
+    # instructions = read_input("sample1.txt")
     instructions = read_input("input.txt")
+    # print(instructions)
 
     coords = get_coords(instructions)
     coords = shift_coords(coords)
-    grid = draw(coords)
+    # grid = draw(coords)
     # print(grid)
 
     scan_points = get_scan_points(coords)
     intervals = get_horizontal_intervals(coords)
+    print(f"Horizontal intervals: {len(intervals)}")
     # print(calculate_slice_plus(4, intervals))
     pit_size = calculate_pit_size(scan_points, intervals)
-    N = np.max(np.array(coords), axis=0)[1] + 1
+    # N = np.max(np.array(coords), axis=0)[1] + 1
     # print(N)
-    for point in scan_points:
+    N = len(scan_points)
+    print("Calculate Slice:")
+    for i, point in enumerate(scan_points, start=1):
         pit_size += calculate_slice_plus(point, intervals)
+        print(f"[{i}/{N}]")
     # for point in scan_points:
     #     pit_size += calculate_slice_plus(point, intervals)
     # vertical_bars = get_vertical_intervals(coords)
