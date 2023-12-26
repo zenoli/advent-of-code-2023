@@ -1,6 +1,6 @@
 from typing import Mapping
 from functools import reduce
-from itertools import pairwise, batched
+from itertools import pairwise
 from collections import defaultdict
 import numpy as np
 import math
@@ -26,16 +26,8 @@ def mul(a: tuple[int, ...], factor: int) -> tuple[int, ...]:
     return tuple(map(lambda x: x * factor, a))
 
 
-def sub(a: tuple[int, ...], b: tuple[int, ...]) -> tuple[int, ...]:
-    return add(a, mul(b, -1))
-
-
 def closed(r):
     return range(r[0], r[-1] + 2)
-
-
-def shrink(r):
-    return range(r[1], r[-1])
 
 
 def read_input(filename):
@@ -71,11 +63,17 @@ def draw(coords):
     return grid
 
 
-def get_scan_points(coords):
-    return set(coords[:, 1])
+def scan_points_generator(coords):
+    scan_points = sorted(set(map(int, coords[:, 1])))
+    for p1, p2 in pairwise(scan_points):
+        yield p1
+        if p1 + 1 < p2:
+            yield p1 + 1
+    yield scan_points[-1]
+    yield scan_points[-1] + 1
 
 
-def get_horizontal_intervals(coords):
+def get_horizontal_lines(coords):
     d = defaultdict(list)
     intervals = (
         (x, closed(range(min(y1, y2), max(y1, y2))))
@@ -88,46 +86,26 @@ def get_horizontal_intervals(coords):
     return dict(sorted(d.items()))
 
 
-def get_vertical_intervals(coords):
-    return sum(
-        max(x1, x2) - min(x1, x2) + 1
-        for (x1, _), (x2, _) in pairwise(coords)
-        if x1 != x2
-    )
-
-
 def get_intervals(point, intervals):
-    return (
-        x for x, ranges in intervals.items() if not all(point not in r for r in ranges)
-    )
-
-
-def get_intervals_plus(point, intervals):
     def get_range(point, ranges):
         for r in ranges:
             if point in r:
                 return r
         return None
 
-    tmp = [(x, r) for x, ranges in intervals.items() if (r := get_range(point, ranges))]
-    return tmp
+    return (
+        (x, r) for x, ranges in intervals.items() if (r := get_range(point, ranges))
+    )
 
 
-def calculate_slice(xs):
-    return sum(len(range(*b)) + 1 for b in batched(xs, 2))
+def calculate_slice(point, horizontal_lines):
+    def reset():
+        return None, (math.inf, -math.inf)
 
-
-MAX_INT = 100000000000000000
-MIN_INT = -MAX_INT
-
-
-def calculate_slice_plus(point, intervals):
     slice = 0
     start = None
-    direction = None
-    opening_interval = None
-    closing_interval = (MAX_INT, MIN_INT)
-    for x, r in get_intervals_plus(point, intervals):
+    opening_interval, closing_interval = reset()
+    for x, r in get_intervals(point, horizontal_lines):
         r_start, r_end = r[0], r[-1]
         if opening_interval is None:
             opening_interval = (r_start, r_end)
@@ -143,8 +121,7 @@ def calculate_slice_plus(point, intervals):
 
             if closing_interval[0] < point and point < closing_interval[1]:
                 slice += (x - start) + 1
-                opening_interval = None
-                closing_interval = (MAX_INT, MIN_INT)
+                opening_interval, closing_interval = reset()
             continue
 
         if (
@@ -168,73 +145,30 @@ def calculate_slice_plus(point, intervals):
             and point < r_end
         ):
             slice += (x - start) + 1
-            opening_interval = None
-            closing_interval = (MAX_INT, MIN_INT)
+            opening_interval, closing_interval = reset()
 
     return slice
 
 
-def calculate_block(start, end, intervals):
-    start += 1
-    xs = get_intervals(start, intervals)
-    slice_size = calculate_slice(xs)
-    return slice_size * (end - start)
+def calculate_pit_size(scan_points, horizontal_lines):
+    def calculate_block(interval):
+        start, end = interval
+        slice_size = calculate_slice(start, horizontal_lines)
+        return slice_size * (end - start)
 
-
-def calculate_pit_size(scan_points, intervals):
-    # result = sum(
-    #     calculate_block(start, end, intervals) for start, end in pairwise(sorted(scan_points))
-    # )
-    result = 0
-    print("Calculate Block:")
-    N = len(scan_points)
-    for i, (start, end) in enumerate(pairwise(sorted(scan_points)), start=1):
-        result += calculate_block(start, end, intervals)
-        print(f"[{i}/{N}]")
-
-    return result
+    return sum(map(calculate_block, pairwise(scan_points)))
 
 
 def main():
     # instructions = read_input("sample1.txt")
     instructions = read_input("input.txt")
-    # print(instructions)
 
     coords = get_coords(instructions)
     coords = shift_coords(coords)
-    # grid = draw(coords)
-    # print(grid)
+    scan_points = scan_points_generator(coords)
+    horizontal_lines = get_horizontal_lines(coords)
 
-    scan_points = get_scan_points(coords)
-    intervals = get_horizontal_intervals(coords)
-    print(f"Horizontal intervals: {len(intervals)}")
-    # print(calculate_slice_plus(4, intervals))
-    pit_size = calculate_pit_size(scan_points, intervals)
-    # N = np.max(np.array(coords), axis=0)[1] + 1
-    # print(N)
-    N = len(scan_points)
-    print("Calculate Slice:")
-    for i, point in enumerate(scan_points, start=1):
-        pit_size += calculate_slice_plus(point, intervals)
-        print(f"[{i}/{N}]")
-    # for point in scan_points:
-    #     pit_size += calculate_slice_plus(point, intervals)
-    # vertical_bars = get_vertical_intervals(coords)
-
-    # col_counts = np.array(
-    #     list(map(lambda point: calculate_slice_plus(point, intervals), range(N)))
-    # )
-
-    # np.savetxt(
-    #     "out/col_counts_incorrect.txt",
-    #     col_counts,
-    #     fmt="%s",
-    #     delimiter=",",
-    # )
-
-    # print(col_counts)
-    # print(scan_points)
-    # print(intervals)
+    pit_size = calculate_pit_size(scan_points, horizontal_lines)
     print(pit_size)
 
 
