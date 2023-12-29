@@ -39,43 +39,55 @@ def read_input(filename):
     return dict(map(parse_workflow, workflows)), list(map(parse_part, parts))
 
 
-def process(part, workflows):
-    # print(part)
+def get_block(condition):
+    d = defaultdict(lambda: (1, 4001))
+    if condition is None:
+        return d
 
-    def step(part, state, workflows):
-        for condition, dest in workflows[state]:
-            if not condition:
-                return dest
-            if eval(
-                f"{part[condition['category']]} {condition['op']} {condition["thresh"]}"
-            ):
-                return dest
-
-    state = "in"
-    while state not in ["R", "A"]:
-        state = step(part, state, workflows)
-    return state
+    category, op, thresh = condition.values()
+    if op == "<":
+        d[category] = (1, thresh)
+    else:
+        d[category] = (thresh + 1, 4001)
+    return d
 
 
-def extract_partitions(workflows):
-    def extract(rules):
-        conditions = (condition.values() for condition, _ in rules if condition)
-        return {
-            category: thresh + (0 if op == "<" else 1)
-            for (category, op, thresh) in conditions
-        }
+def invert_condition(condition):
+    category, op, thresh = condition.values()
+    if op == "<":
+        return {"category": category, "op": ">", "thresh": thresh - 1}
+    else:
+        return {"category": category, "op": "<", "thresh": thresh + 1}
 
-    partitions = defaultdict(lambda: set([1, 4001]))
 
-    for category, value in chain(
-        *map(lambda x: x.items(), map(extract, workflows.values()))
-    ):
-        partitions[category].add(value)
+def generate_constraint_blocks(rules):
+    next_constraint_block = get_block(None)
+    blocks = []
+    for condition, state in rules[:-1]:
+        block = intersect(get_block(condition), next_constraint_block)
+        next_constraint_block = intersect(
+            get_block(invert_condition(condition)), next_constraint_block
+        )
+        blocks.append((block, state))
 
-    partitions_sorted = OrderedDict()
-    for category in "xmas":
-        partitions_sorted[category] = sorted(partitions[category])
-    return partitions_sorted
+    blocks.append((next_constraint_block, rules[-1][1]))
+    return blocks
+
+
+def intersect(block1, block2):
+    def intersect_interval(a, b):
+        a0, a1 = a
+        b0, b1 = b
+        return (max(a0, b0), min(a1, b1))
+
+    return {
+        category: intersect_interval(block1[category], block2[category])
+        for category in "xmas"
+    }
+
+
+def is_valid_block(block):
+    return all(start < end for (start, end) in block.values())
 
 
 def volume(*ranges):
@@ -86,24 +98,75 @@ def volume(*ranges):
     return prod(map(diff, ranges))
 
 
-def main():
-    # workflows, parts = read_input("sample.txt")
-    workflows, _ = read_input("input.txt")
-    partitions = extract_partitions(workflows)
+def update_constraint(condition, constraint):
+    category, op, thresh = condition.values()
+    low, hi = constraint[category]
+    if op == "<":
+        hi = min(hi, thresh)
+    else:
+        low = max(low, thresh + 1)
 
-    print(partitions)
+    if low < hi:
+        constraint[category] = (low, hi)
+        return constraint
+    else:
+        return None
+
+
+def update_constraints(condition, constraints):
+    return list(map(lambda c: update_constraint(condition, c), constraints))
+
+
+def get_constraints(state, workflows):
+    if state == "A":
+        return [{x: (1, 4001), m: (1, 4001), a: (1, 4001), s: (1, 4001)}]
+
+    constraints = []
+    for constraint_block, out_state in workflows[state]:
+        if out_state == "R":
+            continue
+        neighbor_constraints = get_constraints(out_state, workflows)
+        constraints.extend(
+            [intersect(constraint_block, c) for c in neighbor_constraints]
+        )
+
+    return constraints
+
+
+def solve(input):
+    workflows, _ = read_input(input)
+    constraint_blocks_dict = {
+        state: generate_constraint_blocks(rules) for state, rules in workflows.items()
+    }
+
+    constraints = get_constraints("in", constraint_blocks_dict)
     res = 0
-    N = prod(map(len, partitions.values()))
-    print("N: ", N)
-    for i, (x, m, a, s) in enumerate(product(*map(pairwise, partitions.values()))):
-        if i % 100000 == 0:
-            print(f"[{i}/{N}]")
-        # print(x, m, a, s)
-        state = process({"x": x[0], "m": m[0], "a": a[0], "s": s[0]}, workflows)
-        if state == "A":
-            res += volume(x, m, a, s)
+    for c in constraints:
+        res += volume(*c.values())
+    return res
 
-    print(res)
+
+def main():
+    # workflows, _ = read_input("sample.txt")
+    print(solve("input.txt"))
+    # workflows, _ = read_input("input.txt")
+    # for state, rules in workflows.items():
+    #     print(state)
+    #     constraint_blocks = generate_constraint_blocks(rules)
+    #     for cb, state in constraint_blocks:
+    #         print(cb, "-->", state)
+    #
+    # constraint_blocks_dict = {
+    #     state: generate_constraint_blocks(rules) for state, rules in workflows.items()
+    # }
+    #
+    # constraints = get_constraints("in", constraint_blocks_dict)
+    # res = 0
+    # for c in constraints:
+    #     print(c)
+    #     res += volume(*c.values())
+    #
+    # print(res)
 
 
 if __name__ == "__main__":
