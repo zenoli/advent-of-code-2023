@@ -147,26 +147,7 @@ def solve(input):
 
 
 def main():
-    # workflows, _ = read_input("sample.txt")
     print(solve("input.txt"))
-    # workflows, _ = read_input("input.txt")
-    # for state, rules in workflows.items():
-    #     print(state)
-    #     constraint_blocks = generate_constraint_blocks(rules)
-    #     for cb, state in constraint_blocks:
-    #         print(cb, "-->", state)
-    #
-    # constraint_blocks_dict = {
-    #     state: generate_constraint_blocks(rules) for state, rules in workflows.items()
-    # }
-    #
-    # constraints = get_constraints("in", constraint_blocks_dict)
-    # res = 0
-    # for c in constraints:
-    #     print(c)
-    #     res += volume(*c.values())
-    #
-    # print(res)
 
 
 if __name__ == "__main__":

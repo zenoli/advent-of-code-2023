@@ -1,0 +1,95 @@
+
+graph = {
+    broadcster: [a,b,c],
+    a: [b]
+
+}
+
+type Task = list[tuple[str, boolean]]
+
+
+class Module:
+    self.outputs: list[str]
+    self.inputs: list[str]
+    
+    def process(in_pulse: bool, name: str) -> boolean
+        pass
+
+
+    def generate_tasks(out_pulse: bool) -> list[Task]:
+        return [(out_module, out_pulse) for out_module in self.outputs]
+
+
+class Broadcaster(Module):
+    
+    def process(in_pulse: bool, name: str):
+        return generate_tasks(in_pulse)
+
+
+class FlipFlop(Module):
+    
+    self.state = False
+
+    def process(in_pulse: bool, name: str):
+        if not inpulse:
+            self.state = not self.state
+            return generate_tasks(self.state)
+        else
+            return []
+
+
+class Conjunction(Module):
+    ...
+
+
+
+
+inputs = {
+    a: [broadcaster]
+    inv: [a]
+    con: [a, b]
+    b: [inv]
+    output: [con]
+}
+
+outputs = {
+    broadcaster: [a]
+    a: [inv, con]
+    inv: [b]
+    b: [con]
+    con: [output]
+}
+
+flipflops = {
+    a: False
+    b: False
+}
+
+conjuctions = {
+    inv: { a: False },
+    con: { a: False, b: False}
+}
+
+
+def process(pulse, src, dst):
+    if dst[0] == "&":
+        return process_conjunction(pulse, src, dst, flipflops)
+    elif dst[0] == "%"
+        return process_flipflop(pulse, src, dst, flipflops)
+    elif dst == "broadcaster":
+        return process_broadcaster(...)
+    else:
+        return []
+
+
+
+def solve():
+    tasks = [(False, "button", "broadcaster")]
+    while tasks:
+        task = tasks.pop(0)
+        tasks.extend(process(*task))
+
+
+
+    
+
