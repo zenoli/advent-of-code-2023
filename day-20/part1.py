@@ -68,9 +68,6 @@ def solve(input):
 
     input_mapping, output_mapping, flipflops, conjunctions = read_input(input)
     conjunctions = initialize_conjunctions(input_mapping, conjunctions)
-    print(input_mapping)
-    print(output_mapping)
-    print(flipflops, conjunctions)
 
     pulses = {"low": 0, "high": 0}
     for _ in range(1000):
