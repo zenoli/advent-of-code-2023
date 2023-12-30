@@ -1,48 +1,6 @@
 from itertools import product, chain
 from collections import defaultdict
-from functools import cache
 import math
-
-FF = {
-    "hp",
-    "gb",
-    "qn",
-    "vx",
-    "gs",
-    "tl",
-    "bb",
-    "gr",
-    "vz",
-    "jm",
-    "dt",
-    "lj",
-    "mp",
-    "db",
-    "lq",
-    "zb",
-    "lb",
-    "sz",
-    "pm",
-    "xv",
-    "bh",
-    "cd",
-    "jk",
-    "zq",
-    "gf",
-    "xh",
-    "rt",
-    "lg",
-    "fm",
-    "pb",
-    "gz",
-    "nk",
-    "mb",
-    "kj",
-    "mv",
-}
-
-FF1 = {"gs", "nk", "lq", "zb", "lg", "rt", "vx", "lj", "sz"}
-# FF = {"vz", "mv"}
 
 
 def read_input(filename):
@@ -80,16 +38,8 @@ def initialize_conjunctions(input_mapping, conjunctions):
 
 
 def solve(input):
-    dependencies = set()
-
-    def get_dependencies(name):
-        for input in input_mapping[name]:
-            if input not in dependencies:
-                dependencies.add(input)
-                get_dependencies(input)
-
     def push_button(flipflops, conjunctions):
-        def process(pulse, src, dst):
+        def process(pulse: bool, src: str, dst: str) -> list[tuple[bool, str, str]]:
             if dst in conjunctions:
                 conjunctions[dst][src] = pulse
                 out_pulse = not all(conjunctions[dst].values())
@@ -106,71 +56,34 @@ def solve(input):
                 return [(pulse, dst, new_dest) for new_dest in output_mapping[dst]]
             return []
 
-        tasks = [(False, "button", "broadcaster")]
+        tasks: list[tuple[bool, str, str]] = [(False, "button", "broadcaster")]
 
         count = 0
         while tasks:
             pulse, src, dst = tasks.pop(0)
-            # print(f"{src} -{'high' if pulse else 'low'}-> {dst}")
             count += 1
-            if not pulse and dst == "rx":
-                return True
             tasks.extend(process(pulse, src, dst))
         return flipflops, conjunctions
 
     input_mapping, output_mapping, flipflops, conjunctions = read_input(input)
 
+    # Maps counter NAND to reset node
+    cycle_nodes = {"hd": "hp", "fl": "xv", "kc": "zb", "tb": "qn"}
+    counts = dict()
+
     conjunctions = initialize_conjunctions(input_mapping, conjunctions)
-    # for output, inputs in input_mapping.items():
-    #     print(f"{output} <-- {inputs}")
-
-    count = 0
-    flipped_on = None
-    flipped_off = None
-    ff_test = "vz"
-    ff_on1 = dict()
-    ff_off = dict()
-    ff_on2 = dict()
-
-    while not all(map(lambda ff: ff in ff_on2, FF)):
-        count += 1
+    count = 1
+    while not all(nand in counts for nand in cycle_nodes):
         flipflops, conjunctions = push_button(flipflops, conjunctions)
+        count += 1
+        for nand, reset in cycle_nodes.items():
+            if all(v for name, v in conjunctions[nand].items() if name != reset):
+                counts[nand] = count
 
-        for ff in FF:
-            if ff not in ff_on1 and flipflops[ff] and ff not in ff_on2:
-                ff_on1[ff] = count
-
-        for ff in FF:
-            if ff in ff_on1 and not flipflops[ff]:
-                ff_off[ff] = count
-
-        for ff in FF:
-            if ff in ff_on1 and ff in ff_off and flipflops[ff] and ff not in ff_on2:
-                ff_on2[ff] = count
-                del ff_off[ff]
-
-        if not flipped_on and flipflops[ff_test]:
-            flipped_on = count
-
-        if flipped_on and not flipflops[ff_test]:
-            flipped_off = count
-            print(f"ON: {flipped_on}, duration: {flipped_off - flipped_on}")
-            flipped_on = None
-
-    for on1, on2 in zip(ff_on1.items(), ff_on2.items()):
-        print(on1, on2)
-    # for k, v in ff_on1.items():
-    #     print(f"{k}: start: {v[0]}, stepsize: {v[2] - v[0]}, length: {v[1]}")
-    print(
-        math.lcm(
-            *list(map(lambda v: v[1] - v[0], zip(ff_on1.values(), ff_on2.values())))
-        )
-    )
+    return math.lcm(*counts.values())
 
 
 def main():
-    state = {}
-    # res = solve("sample2.txt")
     res = solve("input.txt")
     print(res)
 
