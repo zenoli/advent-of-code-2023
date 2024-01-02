@@ -25,6 +25,6 @@ My attempt at aoc 23.
 - [x] day 19
 - [x] day 20
 - [x] day 21
-- [ ] day 22
+- [x] day 22
 - [ ] day 23
 - [ ] day 24
