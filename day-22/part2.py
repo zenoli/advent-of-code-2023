@@ -16,6 +16,8 @@ class BrickTower:
         self.tower[:, :, 0] = "G"  # Ground
         self.top = np.zeros(shape[:2]).astype(int)
         self.settled_heights = dict()
+        self.drop_all()
+        self.supporters = self.compute_supporter_mapping()
 
     def drop(self, brick: Brick):
         (x1, y1, z1), (x2, y2, z2) = brick
@@ -63,7 +65,7 @@ class BrickTower:
         return res
 
     def grounded_bricks(self, removed_brick):
-        supporters = self.compute_supporter_mapping()
+        supporters = self.supporters
 
         visited = dict()
         queue = ["G"]
@@ -109,7 +111,6 @@ def solve(input):
     bricks = list(read_input(input))
 
     brick_tower = BrickTower(bricks)
-    brick_tower.drop_all()
 
     unsave_bricks = set.union(
         *(
