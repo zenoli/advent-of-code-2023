@@ -1,7 +1,8 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from heapq import heappop, heappush
-from itertools import pairwise
+from itertools import pairwise, chain
 import numpy as np
+import math
 from operator import itemgetter
 
 
@@ -46,38 +47,26 @@ def on_grid(grid, pos) -> bool:
 
 
 class Dijkstra:
-    def __init__(self, grid) -> None:
-        self.grid = grid
-
-    def on_grid(self, pos) -> bool:
-        return (
-            all(map(lambda x: x >= 0, pos))
-            and pos[0] < self.grid.shape[0]
-            and pos[1] < self.grid.shape[1]
-        )
-
-    def get_neighbors(self, pos):
-        directions = np.array([UP, DOWN, LEFT, RIGHT])
-        neighbors = (tuple(n) for n in pos + directions)
-        return (n for n in neighbors if self.on_grid(n) and self.grid[n] != "#")
+    def __init__(self, graph) -> None:
+        self.graph = graph
 
     def solve(self, start):
         queue = []
 
-        shortest_paths = np.full(self.grid.shape, self.grid.size)
-        visited = np.full(self.grid.shape, False)
+        shortest_paths = {v: math.inf for v in self.graph}
+        visited = {v: False for v in self.graph}
         shortest_paths[start] = 0
         heappush(queue, (shortest_paths[start], start))
         while queue:
-            _, pos = heappop(queue)
-            if visited[pos]:
+            _, current = heappop(queue)
+            if visited[current]:
                 continue
-            visited[pos] = True
+            visited[current] = True
 
-            for neighbor in self.get_neighbors(pos):
+            for neighbor, length in self.graph[current]:
                 shortest_paths[neighbor] = min(
-                    int(shortest_paths[pos] + 1),
-                    int(shortest_paths[neighbor]),
+                    shortest_paths[current] - length,
+                    shortest_paths[neighbor],
                 )
                 if not visited[neighbor]:
                     heappush(queue, (shortest_paths[neighbor], neighbor))
@@ -109,6 +98,26 @@ def find_vertices(grid):
 
 
 def compute_paths(grid, start):
+    def compute_path(grid, start, direction):
+        def compute_next_direction(
+            grid, curr_pos: Position, curr_dir: Direction
+        ) -> tuple[Position, Direction]:  # type: ignore
+            for next_dir in (curr_dir, rot_left(curr_dir), rot_right(curr_dir)):
+                next_pos = add(curr_pos, next_dir)
+                if on_grid(grid, next_pos) and grid[next_pos] != "#":
+                    return next_pos, next_dir  # type: ignore
+            return curr_dir, curr_pos
+
+        pos, direction = compute_next_direction(grid, start, direction)
+
+        n, m = grid.shape
+        steps = 3
+        while grid[pos] not in [">", "v"] and pos != (n - 2, m - 2):
+            pos, direction = compute_next_direction(grid, pos, direction)
+            steps += 1
+
+        return compute_next_direction(grid, pos, direction)[0], steps
+
     paths = []
     for d in (DOWN, RIGHT):
         pos = add(start, d)
@@ -118,24 +127,20 @@ def compute_paths(grid, start):
     return paths
 
 
-def compute_path(grid, start, direction):
-    def compute_next_direction(
-        grid, curr_pos: Position, curr_dir: Direction
-    ) -> tuple[Position, Direction]:  # type: ignore
-        for next_dir in (curr_dir, rot_left(curr_dir), rot_right(curr_dir)):
-            next_pos = add(curr_pos, next_dir)
-            if on_grid(grid, next_pos) and grid[next_pos] != "#":
-                return next_pos, next_dir  # type: ignore
-        return curr_dir, curr_pos
+def compute_in_degrees(graph):
+    return Counter(map(itemgetter(0), chain(*graph.values())))
 
-    pos, direction = compute_next_direction(grid, start, direction)
 
-    steps = 3
-    while grid[pos] not in [">", "v"]:
-        pos, direction = compute_next_direction(grid, pos, direction)
-        steps += 1
-
-    return compute_next_direction(grid, pos, direction)[0], steps
+def is_cyclic(graph):
+    in_degrees = compute_in_degrees(graph)
+    Q = set(v for v in graph if in_degrees[v] == 0)
+    while Q:
+        v = Q.pop()
+        for u, _ in graph[v]:
+            in_degrees[u] -= 1
+            if in_degrees[u] == 0:
+                Q.add(u)
+    return set(in_degrees.values()) != {0}
 
 
 def solve(input):
@@ -144,25 +149,26 @@ def solve(input):
             print("".join(map(str, line)))
 
     grid = read_input(input)
-    grid[-2, -2] = "v"
-
-    # dijkstra = Dijkstra(grid)
-    # shortest_paths = dijkstra.solve((0, 1))
     np.set_printoptions(linewidth=120)
-    # shortest_paths[shortest_paths == shortest_paths.size] = -1
-    # print(shortest_paths)
-    # debug(grid)
     vertices = find_vertices(grid)
     graph = {vertex: compute_paths(grid, vertex) for vertex in vertices}
+
+    in_degrees = compute_in_degrees(graph)
+    print(in_degrees)
 
     for k, v in graph.items():
         print(k, v)
 
+    print(is_cyclic(graph))
+    dijkstra = Dijkstra(graph)
+    shortest_paths = dijkstra.solve((0, 1))
+    print(shortest_paths)
     return 0
 
 
 def main():
     res = solve("sample.txt")
+    # res = solve("input.txt")
     print(res)
 
 
