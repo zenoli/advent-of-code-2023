@@ -46,33 +46,6 @@ def on_grid(grid, pos) -> bool:
     )
 
 
-class Dijkstra:
-    def __init__(self, graph) -> None:
-        self.graph = graph
-
-    def solve(self, start):
-        queue = []
-
-        shortest_paths = {v: math.inf for v in self.graph}
-        visited = {v: False for v in self.graph}
-        shortest_paths[start] = 0
-        heappush(queue, (shortest_paths[start], start))
-        while queue:
-            _, current = heappop(queue)
-            if visited[current]:
-                continue
-            visited[current] = True
-
-            for neighbor, length in self.graph[current]:
-                shortest_paths[neighbor] = min(
-                    shortest_paths[current] - length,
-                    shortest_paths[neighbor],
-                )
-                if not visited[neighbor]:
-                    heappush(queue, (shortest_paths[neighbor], neighbor))
-        return shortest_paths
-
-
 def find_vertices(grid):
     left_arrow_indices = zip(*np.where(grid == ">"))
     down_arrow_indices = zip(*np.where(grid == "v"))
@@ -143,32 +116,56 @@ def is_cyclic(graph):
     return set(in_degrees.values()) != {0}
 
 
+def topological_sort(dag):
+    in_degrees = compute_in_degrees(dag)
+    Q = set(v for v in dag if in_degrees[v] == 0)
+    while Q:
+        v = Q.pop()
+        yield v
+        for u, _ in dag[v]:
+            in_degrees[u] -= 1
+            if in_degrees[u] == 0:
+                Q.add(u)
+    return set(in_degrees.values()) != {0}
+
+
+def get_inverted_edges(graph):
+    inverted = defaultdict(list)
+    for v, neighbors in graph.items():
+        for u, length in neighbors:
+            inverted[u].append((v, length))
+    return inverted
+
+
+def compute_longest_paths(dag):
+    inverted = get_inverted_edges(dag)
+    longest_paths = defaultdict(int)
+    for v in topological_sort(dag):
+        for u, length in inverted[v]:
+            longest_paths[v] = max(longest_paths[v], longest_paths[u] + length)
+    return longest_paths
+
+
 def solve(input):
     def debug(grid):
         for line in grid:
             print("".join(map(str, line)))
 
+    # np.set_printoptions(linewidth=120)
     grid = read_input(input)
-    np.set_printoptions(linewidth=120)
     vertices = find_vertices(grid)
     graph = {vertex: compute_paths(grid, vertex) for vertex in vertices}
 
-    in_degrees = compute_in_degrees(graph)
-    print(in_degrees)
-
-    for k, v in graph.items():
-        print(k, v)
-
+    # Check if graph is acyclic. Otherwise the longest paths algorithm doen't work.
     print(is_cyclic(graph))
-    dijkstra = Dijkstra(graph)
-    shortest_paths = dijkstra.solve((0, 1))
-    print(shortest_paths)
-    return 0
+    longest_paths = compute_longest_paths(graph)
+    n, m = grid.shape
+    return longest_paths[(n - 1, m - 2)]
 
 
 def main():
-    res = solve("sample.txt")
-    # res = solve("input.txt")
+    # res = solve("sample.txt")
+    res = solve("input.txt")
     print(res)
 
 
