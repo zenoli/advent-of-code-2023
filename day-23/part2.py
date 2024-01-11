@@ -137,11 +137,20 @@ def get_inverted_edges(graph):
     return inverted
 
 
-def to_undirected(graph):
+def add_inverted_egdes(graph):
+    def is_inner_vertex(v):
+        return len(graph[v]) == 2 and len(inverted[v]) == 2
+
     inverted = get_inverted_edges(graph)
-    for v, edges in inverted.items():
-        graph[v].extend(edges)
-    return graph
+    out_graph = defaultdict(set)
+    for v in graph:
+        out_graph[v].update(set(graph[v]))
+        if is_inner_vertex(v):
+            out_graph[v] = out_graph[v].union(inverted[v])
+            for u, w in graph[v]:
+                out_graph[u].add((v, w))
+
+    return out_graph
 
 
 def compute_longest_path(graph, node, dst, current_path):
@@ -179,10 +188,7 @@ def solve(input):
     vertices = find_vertices(grid)
     graph = {vertex: compute_paths(grid, vertex) for vertex in vertices}
 
-    graph = to_undirected(graph)
-
-    for v, edges in graph.items():
-        print(f"{v} -> {edges}")
+    graph = add_inverted_egdes(graph)
 
     # to_graphviz_format(graph)
 
