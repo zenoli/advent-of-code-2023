@@ -1,8 +1,10 @@
+import math
+import time
 from collections import Counter, defaultdict
-from itertools import pairwise, chain
-import numpy as np
+from itertools import chain, pairwise
 from operator import itemgetter
 
+import numpy as np
 
 Position = tuple[int, int]
 Direction = Position
@@ -135,18 +137,30 @@ def get_inverted_edges(graph):
     return inverted
 
 
-def compute_longest_paths(graph):
+def to_undirected(graph):
     inverted = get_inverted_edges(graph)
-    longest_paths = defaultdict(int)
-    for v in topological_sort(graph):
-        for u, length in inverted[v]:
-            longest_paths[v] = max(longest_paths[v], longest_paths[u] + length)
-    return longest_paths
+    for v, edges in inverted.items():
+        graph[v].extend(edges)
+    return graph
+
+
+def compute_longest_path(graph, node, dst, current_path):
+    current_path.add(node)
+    if node == dst:
+        return 0
+
+    paths = [
+        compute_longest_path(graph, neighbor, dst, current_path.copy()) + weight
+        for neighbor, weight in graph[node]
+        if neighbor not in current_path
+    ]
+    return max(paths) if paths else -math.inf
 
 
 def to_graphviz_format(graph):
     def vertex(v):
-        return f"\"{v}\""
+        return f'"{v}"'
+
     print("strict digraph {")
     for v, edges in graph.items():
         for u, w in edges:
@@ -165,17 +179,25 @@ def solve(input):
     vertices = find_vertices(grid)
     graph = {vertex: compute_paths(grid, vertex) for vertex in vertices}
 
-    to_graphviz_format(graph)
+    graph = to_undirected(graph)
 
-    longest_paths = compute_longest_paths(graph)
+    for v, edges in graph.items():
+        print(f"{v} -> {edges}")
+
+    # to_graphviz_format(graph)
+
     n, m = grid.shape
-    return longest_paths[(n - 1, m - 2)]
+    start = time.time()
+    longest_path = compute_longest_path(graph, (0, 1), (n - 1, m - 2), set())
+    end = time.time()
+    print(f"Time elapsed: {end - start}")
+    return longest_path
 
 
 def main():
-    res = solve("sample.txt")
-    # res = solve("input.txt")
-    # print(res)
+    # res = solve("sample.txt")
+    res = solve("input.txt")
+    print(res)
 
 
 if __name__ == "__main__":
