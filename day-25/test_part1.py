@@ -46,32 +46,14 @@ def test_karger():
         3: [4]
     }  # fmt: off
     karger = Karger(input)
-    print("Before contraction: ")
-    debug(karger.adj)
     karger.contract((1, 2))
-    
-    print("After contraction 1: ")
-    debug(karger.adj)
-    print("Vertex merge counts:")
-    print(karger.vertex_merge_counts)
-    print("Edge counts:")
-    print(karger.edge_counts)
 
-    karger.contract((1, 2))
-    
-    print("After contraction 1: ")
-    debug(karger.adj)
-    print("Vertex merge counts:")
-    print(karger.vertex_merge_counts)
-    print("Edge counts:")
-    print(karger.edge_counts)
-
-    # assert karger.adj == [
-    #     [0, 1, 0, 0],
-    #     [1, 0, 3, 0],
-    #     [0, 3, 0, 0],
-    #     [0, 0, 0, 0]
-    # ]  # fmt: off
+    assert karger.adj == [
+        [0, 2, 0, 0],
+        [2, 0, 3, 0],
+        [0, 3, 0, 0],
+        [0, 0, 0, 0]
+    ]  # fmt: off
 
 
 if __name__ == "__main__":

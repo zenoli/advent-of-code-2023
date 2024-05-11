@@ -114,26 +114,12 @@ def get_vertices(graph):
 
 def solve(input):
     input = read_input(input)
-    # input = {
-    #     1: [2, 3],
-    #     2: [3, 4, 4],
-    #     3: [4]
-    # }  # fmt: off
-    # karger = Karger(input)
-    # karger.solve()
-    # print(karger.vertex_merge_counts[:10])
-    # print(karger.edge_counts[:10])
-    # return
 
     karger = Karger(input)
     result = karger.solve()
     while result != 3:
         karger = Karger(input)
         result = karger.solve()
-        print(karger.vertex_merge_counts[:10])
-        print(result)
-    print(karger.vertex_merge_counts)
-    print(karger.edge_counts)
     x, y, *_ = karger.vertex_merge_counts
     return x * y
 
