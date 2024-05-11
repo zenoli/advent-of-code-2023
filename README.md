@@ -28,4 +28,4 @@ My attempt at aoc 23.
 - [x] day 22
 - [x] day 23
 - [x] day 24
-- [ ] day 25
+- [x] day 25

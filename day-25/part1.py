@@ -1,3 +1,4 @@
+import random
 from collections import defaultdict
 
 
@@ -27,6 +28,11 @@ class Karger:
                 edge_counts[v] += 1
         return adj, edge_counts
 
+    def get_random_edge(self):
+        [u] = random.choices(range(self.N), self.edge_counts[: self.N])
+        [(v, _)] = random.choices(list(enumerate(self.adj[u])), self.adj[u])
+        return u, v
+
     def contract(self, edge):
         u, v = min(edge), max(edge)
 
@@ -51,10 +57,17 @@ class Karger:
         for i in range(self.N):
             new_edge_count += self.adj[u][i]
         self.edge_counts[u] = new_edge_count
+        self.edge_counts[v] = self.edge_counts[self.N]
         self.edge_counts[self.N] = 0
+
+        self.vertex_merge_counts[u] += self.vertex_merge_counts[v]
+        self.vertex_merge_counts[v] = self.vertex_merge_counts[self.N]
         self.vertex_merge_counts[self.N] = 0
 
-        self.vertex_merge_counts[u] += 1
+    def solve(self):
+        while self.N > 2:
+            self.contract(self.get_random_edge())
+        return self.edge_counts[0]
 
 
 def read_input(filename):
@@ -99,19 +112,36 @@ def get_vertices(graph):
     return {v: i for i, v in enumerate(vertices)}
 
 
-
 def solve(input):
     input = read_input(input)
-    # graph = get_graph(input)
-    # adj, egdes = initialize(input)
-    # debug(adj)
-    # print(graph)
+    # input = {
+    #     1: [2, 3],
+    #     2: [3, 4, 4],
+    #     3: [4]
+    # }  # fmt: off
+    # karger = Karger(input)
+    # karger.solve()
+    # print(karger.vertex_merge_counts[:10])
+    # print(karger.edge_counts[:10])
+    # return
+
+    karger = Karger(input)
+    result = karger.solve()
+    while result != 3:
+        karger = Karger(input)
+        result = karger.solve()
+        print(karger.vertex_merge_counts[:10])
+        print(result)
+    print(karger.vertex_merge_counts)
+    print(karger.edge_counts)
+    x, y, *_ = karger.vertex_merge_counts
+    return x * y
 
 
 def main():
-    res = solve("sample.txt")
-    # res = solve("input.txt")
-    # print(res)
+    # res = solve("sample.txt")
+    res = solve("input.txt")
+    print(res)
 
 
 if __name__ == "__main__":
